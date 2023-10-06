@@ -86,7 +86,7 @@ lxw_chart * hb_XLSXChart_par( int iParam )
       return pGC->chart;
    else
    {
-	   hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
+      hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
       return NULL;
    }
 }
@@ -96,10 +96,10 @@ lxw_chart * hb_XLSXChart_item( PHB_ITEM pValue )
    PHB_CHART_GC pGC = ( PHB_CHART_GC ) hb_itemGetPtrGC( pValue, &s_gcXLSXChartFuncs );
 
    if ( pGC && pGC->chart )
-	   return pGC->chart;
+      return pGC->chart;
    else
    {
-	   hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
+      hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
       return NULL;
    }
 }
