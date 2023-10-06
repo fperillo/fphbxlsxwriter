@@ -22,19 +22,20 @@
 
 static HB_GARBAGE_FUNC( XLSXFormat_release )
 {
-	// printf( "Chiamato hb_XLSXFormat_release 2\n" );
+   // fprintf( stderr, "Chiamato hb_XLSXFormat_release 2\n" );
    void ** ph = ( void ** ) Cargo;
 
    /* Check if pointer is not NULL to avoid multiple freeing */
    if( ph && *ph )
    {
+      // fprintf( stderr, "Chiamato hb_XLSXFormat_release MA NON CANCELLO\n" );
       /* Destroy the object */
-	 // printf( "Chiamato hb_XLSXFormat_release 3a\n" );
-      lxw_format_free( ( lxw_format * ) *ph );
-	 // printf( "Chiamato hb_XLSXFormat_release 3b\n" );
-
+      //fprintf( stderr, "Chiamato hb_XLSXFormat_release 3a\n" );
+      //lxw_format_free( ( lxw_format * ) *ph );
+      //fprintf( stderr, "Chiamato hb_XLSXFormat_release 3b\n" );
       /* set pointer to NULL to avoid multiple freeing */
-      *ph = NULL;
+      //*ph = NULL;
+      //fprintf( stderr, "Chiamato hb_XLSXFormat_release 3c\n" );
    }
 }
 
@@ -82,7 +83,7 @@ lxw_format * hb_XLSXFormat_item( PHB_ITEM pValue )
  */
 HB_FUNC( LXW_FORMAT_NEW )
 {
-	// printf( "Chiamato lxw_format_new\n" );
+   // fprintf( stderr, "Chiamato lxw_format_new\n" );
    lxw_format *format = lxw_format_new();
    hb_XLSXFormat_ret( format );
    // hb_retptr( format ); 
@@ -100,7 +101,7 @@ HB_FUNC( LXW_FORMAT_NEW )
  */
 HB_FUNC( LXW_FORMAT_FREE )
 {  
-	printf( "Chiamato LXW_FORMAT_FREE\n" );
+	// fprintf( stderr, "Chiamato LXW_FORMAT_FREE\n" );
    // lxw_format *format = hb_parptr( 1 ) ;
 
    // lxw_format_free( format ); 
