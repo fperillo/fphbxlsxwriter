@@ -36,12 +36,13 @@ HB_FUNC( HB_LXW_CHART_FONT_NEW )
 }
 */
 
-// FP: non pu• funzionare, memory leak
-// va fatto con gli hash
 HB_FUNC( HB_LXW_FONT_NEW )
 {
-   lxw_format *format = lxw_format_new();
-   hb_retptr( lxw_format_get_font_key( format ) );
+
+   lxw_font *key = calloc(1, sizeof(lxw_font));
+   memset( key, 0, sizeof( lxw_font ) );
+   hb_retptr( key );
+   return ;
 }
 
 
