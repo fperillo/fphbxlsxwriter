@@ -36,6 +36,93 @@
 */
 
 lxw_format * hb_XLSXFormat_par( int iParam );
+lxw_chart * hb_XLSXChart_par( int iParam );
+
+
+
+typedef struct
+{
+   lxw_worksheet * worksheet;
+} HB_WORKSHEET_GC, * PHB_WORKSHEET_GC;
+
+static HB_GARBAGE_FUNC( XLSXWorksheet_release )
+{
+   // fprintf( stderr, "Chiamato hb_XLSXWorkbook_release 2\n" );
+   PHB_WORKSHEET_GC pGC = ( PHB_WORKSHEET_GC ) Cargo;
+
+   /* Check if pointer is not NULL to avoid multiple freeing */
+   if( pGC->worksheet )
+   {
+      /* Destroy the object */
+      // fprintf( stderr, "Chiamato hb_XLSXWorksheet_release 3a\n" );
+      // lxw_worksheet_free( pGC->worksheet );
+      // fprintf( stderr, "Chiamato hb_XLSXWorksheet_release 3b\n" );
+
+      /* set pointer to NULL to avoid multiple freeing */
+      pGC->worksheet = NULL;
+      // fprintf( stderr, "Chiamato hb_XLSXWorksheet_release 3c\n" );
+   }
+}
+
+static HB_GARBAGE_FUNC( hb_worksheet_mark )
+{
+   PHB_WORKSHEET_GC pGC = ( PHB_WORKSHEET_GC ) Cargo;
+
+      // fprintf( stderr, "Chiamato hb_worksheet_mark\n" );
+   if( pGC->worksheet )
+      hb_gcMark( pGC->worksheet );
+}
+
+static const HB_GC_FUNCS s_gcXLSXWorksheetFuncs =
+{
+   XLSXWorksheet_release,
+   hb_worksheet_mark
+};
+
+void hb_XLSXWorksheet_ret( lxw_worksheet * p )
+{
+   // fprintf( stderr,"Chiamato hb_XLSXWorksheet_ret\n" );
+   if( p )
+   {
+      PHB_WORKSHEET_GC pGC = ( PHB_WORKSHEET_GC ) hb_gcAllocate( sizeof( HB_WORKSHEET_GC ), &s_gcXLSXWorksheetFuncs );
+      pGC->worksheet = p ;
+
+      hb_retptrGC( pGC );
+   }
+   else
+      hb_retptr( NULL );
+}
+
+lxw_worksheet * hb_XLSXWorksheet_par( int iParam )
+{
+
+   PHB_WORKSHEET_GC pGC = ( PHB_WORKSHEET_GC ) hb_parptrGC( &s_gcXLSXWorksheetFuncs, iParam ); 
+
+   if ( pGC && pGC->worksheet )
+      return pGC->worksheet;
+   else
+   {
+      hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
+      return NULL;
+   }
+}
+
+lxw_worksheet * hb_XLSXWorksheet_item( PHB_ITEM pValue )
+{
+   PHB_WORKSHEET_GC pGC = ( PHB_WORKSHEET_GC ) hb_itemGetPtrGC( pValue, &s_gcXLSXWorksheetFuncs );
+
+   if ( pGC && pGC->worksheet )
+	   return pGC->worksheet;
+   else
+   {
+      hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
+      return NULL;
+   }
+
+}
+
+
+
 
 /*
  *  
@@ -148,7 +235,7 @@ lxw_image_options *image_options( PHB_ITEM pHash )
 /*
 HB_FUNC( LXW_WORKSHEET_FIND_ROW )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
 
    if( self )
@@ -167,7 +254,7 @@ HB_FUNC( LXW_WORKSHEET_FIND_ROW )
 /*
 HB_FUNC( LXW_WORKSHEET_FIND_CELL )
 { 
-   lxw_row *row = hb_parptr(1 ) ;
+   lxw_row *row = hb_XLSXWorksheet_par(1 ) ;
    lxw_col_t col_num = hb_parni( 2 ) ;
 
    hb_retptr( lxw_worksheet_find_cell_in_row( row, col_num) );
@@ -185,7 +272,7 @@ HB_FUNC( LXW_WORKSHEET_FIND_CELL )
 /*
 HB_FUNC( LXW_WORKSHEET_NEW )
 { 
-   lxw_worksheet_init_data *init_data = hb_parptr( 1 ) ;
+   lxw_worksheet_init_data *init_data = hb_XLSXWorksheet_par( 1 ) ;
    if HB_ISNIL( 1 )
    {
       hb_retptr( lxw_worksheet_new( NULL ) ); 
@@ -208,7 +295,7 @@ HB_FUNC( LXW_WORKSHEET_NEW )
 /*
 HB_FUNC( LXW_WORKSHEET_FREE )
 { 
-   lxw_worksheet *worksheet = hb_parptr( 1 ) ;
+   lxw_worksheet *worksheet = hb_XLSXWorksheet_par( 1 ) ;
 
    lxw_worksheet_free( worksheet ) ; 
 }
@@ -246,7 +333,7 @@ HB_FUNC( LXW_BASENAME )
 /*
 HB_FUNC( _VALIDATION_LIST_LENGTH )
 { 
-   char **list = hb_parptr(1 ) ;
+   char **list = hb_XLSXWorksheet_par(1 ) ;
 
    hb_retnl( _validation_list_length( list ) ); 
 }
@@ -305,7 +392,7 @@ HB_FUNC( _VALIDATION_LIST_TO_CSV )
 /*
 HB_FUNC( LXW_WORKSHEET_PREPARE_IMAGE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint16_t image_ref_id = hb_parnl( 2 ) ;
    uint16_t drawing_id = hb_parnl( 3 ) ;
 
@@ -334,7 +421,7 @@ HB_FUNC( LXW_WORKSHEET_PREPARE_IMAGE )
 /*
 HB_FUNC( LXW_WORKSHEET_PREPARE_CHART )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint16_t chart_ref_id = hb_parnl( 2 ) ;
    uint16_t drawing_id = hb_parnl( 3 ) ;
 //   lxw_image_options *image_data = hb_parptr(4 ) ;
@@ -368,7 +455,7 @@ HB_FUNC( LXW_WORKSHEET_PREPARE_CHART )
 /*
 HB_FUNC( LXW_WORKSHEET_WRITE_SINGLE_ROW )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       lxw_worksheet_write_single_row( self ); 
@@ -387,7 +474,7 @@ HB_FUNC( LXW_WORKSHEET_WRITE_SINGLE_ROW )
 /*
 HB_FUNC( LXW_WORKSHEET_WRITE_SHEET_VIEWS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       lxw_worksheet_write_sheet_views( self ); 
@@ -406,7 +493,7 @@ HB_FUNC( LXW_WORKSHEET_WRITE_SHEET_VIEWS )
 /*
 HB_FUNC( LXW_WORKSHEET_ASSEMBLE_XML_FILE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       lxw_worksheet_assemble_xml_file( self ); 
@@ -437,7 +524,7 @@ HB_FUNC( LXW_WORKSHEET_ASSEMBLE_XML_FILE )
  */
 HB_FUNC( WORKSHEET_WRITE_NUMBER )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    double value = hb_parnd(4 ) ;
@@ -463,7 +550,7 @@ HB_FUNC( WORKSHEET_WRITE_NUMBER )
  */
 HB_FUNC( WORKSHEET_WRITE_STRING )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num   = hb_parni( 2 ) ;
    lxw_col_t col_num   = hb_parni( 3 ) ;
    const char *string  = hb_parcx( 4 ) ;
@@ -490,7 +577,7 @@ HB_FUNC( WORKSHEET_WRITE_STRING )
  */
 HB_FUNC( WORKSHEET_WRITE_FORMULA_NUM )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    const char *formula = hb_parcx( 4 ) ;
@@ -526,7 +613,7 @@ worksheet_write_formula_str(lxw_worksheet *self,
  */
 HB_FUNC( WORKSHEET_WRITE_FORMULA )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    const char *formula = hb_parcx( 4 ) ;
@@ -555,7 +642,7 @@ HB_FUNC( WORKSHEET_WRITE_FORMULA )
  */
 HB_FUNC( WORKSHEET_WRITE_ARRAY_FORMULA_NUM )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
    lxw_row_t last_row = hb_parni( 4 ) ;
@@ -584,7 +671,7 @@ HB_FUNC( WORKSHEET_WRITE_ARRAY_FORMULA_NUM )
  */
 HB_FUNC( WORKSHEET_WRITE_ARRAY_FORMULA )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
    lxw_row_t last_row = hb_parni( 4 ) ;
@@ -611,7 +698,7 @@ HB_FUNC( WORKSHEET_WRITE_ARRAY_FORMULA )
  */
 HB_FUNC( WORKSHEET_WRITE_BLANK )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    lxw_format *format = hb_XLSXFormat_par(4 ) ;
@@ -634,7 +721,7 @@ HB_FUNC( WORKSHEET_WRITE_BLANK )
  */
 HB_FUNC( WORKSHEET_WRITE_BOOLEAN )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    int value = hb_parni( 4 ) ;
@@ -662,7 +749,7 @@ HB_FUNC( WORKSHEET_WRITE_BOOLEAN )
 
 HB_FUNC( WORKSHEET_WRITE_DATETIME )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    lxw_datetime datetime; 
@@ -708,7 +795,7 @@ HB_FUNC( WORKSHEET_WRITE_DATETIME )
  */
 HB_FUNC( WORKSHEET_WRITE_URL_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    const char *url = hb_parcx( 4 ) ;
@@ -735,7 +822,7 @@ HB_FUNC( WORKSHEET_WRITE_URL_OPT )
  */
 HB_FUNC( WORKSHEET_WRITE_URL )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    const char *url = hb_parcx( 4 ) ;
@@ -769,7 +856,7 @@ lxw_format * hb_XLSXFormat_item( PHB_ITEM pValue );
  */
 HB_FUNC( WORKSHEET_WRITE_RICH_STRING )
 {
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num   = hb_parni( 2 ) ;
    lxw_col_t col_num   = hb_parni( 3 ) ;
    PHB_ITEM pArray     = hb_param( 4, HB_IT_ARRAY );
@@ -920,11 +1007,11 @@ lxw_row_col_options * hash2row_col_options( PHB_ITEM pHash )
  */
 HB_FUNC( WORKSHEET_SET_COLUMN_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_col_t firstcol = hb_parni( 2 ) ;
    lxw_col_t lastcol = hb_parni( 3 ) ;
    double width = hb_parnd( 4 ) ;
-   lxw_format *format = hb_XLSXFormat_par(5); // hb_parptr(5 ) ;
+   lxw_format *format = hb_XLSXFormat_par(5);
    PHB_ITEM pHash = hb_param( 6, HB_IT_HASH );
 
 
@@ -951,7 +1038,7 @@ HB_FUNC( WORKSHEET_SET_COLUMN_OPT )
  */
 HB_FUNC( WORKSHEET_SET_COLUMN )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_col_t firstcol = hb_parni( 2 ) ;
    lxw_col_t lastcol = hb_parni( 3 ) ;
    double width = hb_parnd( 4 ) ;
@@ -976,7 +1063,7 @@ HB_FUNC( WORKSHEET_SET_COLUMN )
  */
 HB_FUNC( WORKSHEET_SET_ROW_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    double height = hb_parnd( 3 ) ;
    lxw_format *format = hb_XLSXFormat_par(4 ) ;
@@ -1001,7 +1088,7 @@ HB_FUNC( WORKSHEET_SET_ROW_OPT )
  */
 HB_FUNC( WORKSHEET_SET_ROW )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    double height = hb_parnd( 3 ) ;
    lxw_format *format = hb_XLSXFormat_par(4 ) ;
@@ -1027,7 +1114,7 @@ HB_FUNC( WORKSHEET_SET_ROW )
  */
 HB_FUNC( WORKSHEET_MERGE_RANGE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
    lxw_row_t last_row = hb_parni( 4 ) ;
@@ -1054,7 +1141,7 @@ HB_FUNC( WORKSHEET_MERGE_RANGE )
  */
 HB_FUNC( WORKSHEET_AUTOFILTER )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
    lxw_row_t last_row  = hb_parni( 4 ) ;
@@ -1079,7 +1166,7 @@ HB_FUNC( WORKSHEET_AUTOFILTER )
  */
 HB_FUNC( WORKSHEET_SELECT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_select( self ) ; 
@@ -1100,7 +1187,7 @@ HB_FUNC( WORKSHEET_SELECT )
  */
 HB_FUNC( WORKSHEET_ACTIVATE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_activate( self ); 
@@ -1122,7 +1209,7 @@ HB_FUNC( WORKSHEET_ACTIVATE )
  */
 HB_FUNC( WORKSHEET_SET_FIRST_SHEET )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_set_first_sheet( self ); 
@@ -1142,7 +1229,7 @@ HB_FUNC( WORKSHEET_SET_FIRST_SHEET )
  */
 HB_FUNC( WORKSHEET_HIDE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_hide( self ); 
@@ -1164,7 +1251,7 @@ HB_FUNC( WORKSHEET_HIDE )
  */
 HB_FUNC( WORKSHEET_SET_SELECTION )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
    lxw_row_t last_row = hb_parni( 4 ) ;
@@ -1191,7 +1278,7 @@ HB_FUNC( WORKSHEET_SET_SELECTION )
  */
 HB_FUNC( WORKSHEET_FREEZE_PANES_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
    lxw_row_t top_row = hb_parni( 4 ) ;
@@ -1217,7 +1304,7 @@ HB_FUNC( WORKSHEET_FREEZE_PANES_OPT )
  */
 HB_FUNC( WORKSHEET_FREEZE_PANES )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
 
@@ -1241,7 +1328,7 @@ HB_FUNC( WORKSHEET_FREEZE_PANES )
  */
 HB_FUNC( WORKSHEET_SPLIT_PANES_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    double y_split = hb_parnd( 2 ) ;
    double x_split = hb_parnd( 3 ) ;
    lxw_row_t top_row = hb_parni( 4 ) ;
@@ -1265,7 +1352,7 @@ HB_FUNC( WORKSHEET_SPLIT_PANES_OPT )
  */
 HB_FUNC( WORKSHEET_SPLIT_PANES )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    double y_split = hb_parnd( 2 ) ;
    double x_split = hb_parnd( 3 ) ;
 
@@ -1287,7 +1374,7 @@ HB_FUNC( WORKSHEET_SPLIT_PANES )
  */
 HB_FUNC( WORKSHEET_SET_PORTRAIT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_set_portrait( self ); 
@@ -1307,7 +1394,7 @@ HB_FUNC( WORKSHEET_SET_PORTRAIT )
  */
 HB_FUNC( WORKSHEET_SET_LANDSCAPE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_set_landscape( self ); 
@@ -1327,7 +1414,7 @@ HB_FUNC( WORKSHEET_SET_LANDSCAPE )
  */
 HB_FUNC( WORKSHEET_SET_PAGE_VIEW )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_set_page_view( self ); 
@@ -1347,7 +1434,7 @@ HB_FUNC( WORKSHEET_SET_PAGE_VIEW )
  */
 HB_FUNC( WORKSHEET_SET_PAPER )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint8_t paper_size = hb_parni( 2 ) ;
 
    if( self )
@@ -1368,7 +1455,7 @@ HB_FUNC( WORKSHEET_SET_PAPER )
  */
 HB_FUNC( WORKSHEET_PRINT_ACROSS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_print_across( self ); 
@@ -1389,7 +1476,7 @@ HB_FUNC( WORKSHEET_PRINT_ACROSS )
  */
 HB_FUNC( WORKSHEET_SET_MARGINS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    double left = hb_parnd( 2 ) ;
    double right = hb_parnd( 3 ) ;
    double top = hb_parnd( 4 ) ;
@@ -1414,7 +1501,7 @@ HB_FUNC( WORKSHEET_SET_MARGINS )
  */
 HB_FUNC( WORKSHEET_SET_HEADER_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    const char *string = hb_parcx( 2 ) ;
    lxw_header_footer_options options = { hb_parnd( 3 ) } ;
 
@@ -1437,7 +1524,7 @@ HB_FUNC( WORKSHEET_SET_HEADER_OPT )
  */
 HB_FUNC( WORKSHEET_SET_FOOTER_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    const char *string = hb_parcx( 2 ) ;
    lxw_header_footer_options options = { hb_parnd( 3 ) } ;
 
@@ -1459,7 +1546,7 @@ HB_FUNC( WORKSHEET_SET_FOOTER_OPT )
  */
 HB_FUNC( WORKSHEET_SET_HEADER )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    const char *string = hb_parcx( 2 ) ;
 
    if( self )
@@ -1480,7 +1567,7 @@ HB_FUNC( WORKSHEET_SET_HEADER )
  */
 HB_FUNC( WORKSHEET_SET_FOOTER )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    const char *string = hb_parcx( 2 ) ;
 
    if( self )
@@ -1501,7 +1588,7 @@ HB_FUNC( WORKSHEET_SET_FOOTER )
  */
 HB_FUNC( WORKSHEET_GRIDLINES )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint8_t option = hb_parni( 2 ) ;
 
    if( self )
@@ -1522,7 +1609,7 @@ HB_FUNC( WORKSHEET_GRIDLINES )
  */
 HB_FUNC( WORKSHEET_CENTER_HORIZONTALLY )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_center_horizontally( self ); 
@@ -1542,7 +1629,7 @@ HB_FUNC( WORKSHEET_CENTER_HORIZONTALLY )
  */
 HB_FUNC( WORKSHEET_CENTER_VERTICALLY )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_center_vertically( self ); 
@@ -1562,7 +1649,7 @@ HB_FUNC( WORKSHEET_CENTER_VERTICALLY )
  */
 HB_FUNC( WORKSHEET_PRINT_ROW_COL_HEADERS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_print_row_col_headers( self ); 
@@ -1583,7 +1670,7 @@ HB_FUNC( WORKSHEET_PRINT_ROW_COL_HEADERS )
  */
 HB_FUNC( WORKSHEET_REPEAT_ROWS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_row_t last_row = hb_parni( 3 ) ;
 
@@ -1606,7 +1693,7 @@ HB_FUNC( WORKSHEET_REPEAT_ROWS )
  */
 HB_FUNC( WORKSHEET_REPEAT_COLUMNS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_col_t first_col = hb_parni( 2 ) ;
    lxw_col_t last_col = hb_parni( 3 ) ;
 
@@ -1630,7 +1717,7 @@ HB_FUNC( WORKSHEET_REPEAT_COLUMNS )
  */
 HB_FUNC( WORKSHEET_PRINT_AREA )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
    lxw_row_t last_row = hb_parni( 4 ) ;
@@ -1654,7 +1741,7 @@ HB_FUNC( WORKSHEET_PRINT_AREA )
  */
 HB_FUNC( WORKSHEET_FIT_TO_PAGES )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint16_t width = hb_parnl( 2 ) ;
    uint16_t height = hb_parnl( 3 ) ;
 
@@ -1676,7 +1763,7 @@ HB_FUNC( WORKSHEET_FIT_TO_PAGES )
  */
 HB_FUNC( WORKSHEET_SET_START_PAGE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint16_t start_page = hb_parnl( 2 ) ;
 
    if( self )
@@ -1697,7 +1784,7 @@ HB_FUNC( WORKSHEET_SET_START_PAGE )
  */
 HB_FUNC( WORKSHEET_SET_PRINT_SCALE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint16_t scale = hb_parnl( 2 ) ;
 
    if( self )
@@ -1719,7 +1806,7 @@ HB_FUNC( WORKSHEET_SET_PRINT_SCALE )
 /*
 HB_FUNC( WORKSHEET_SET_H_PAGEBREAKS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t hbreaks[] = hb_parni( 2 ) ;
 
    hb_retni( worksheet_set_h_pagebreaks( self, hbreaks[] ); 
@@ -1739,7 +1826,7 @@ HB_FUNC( WORKSHEET_SET_H_PAGEBREAKS )
 /*
 HB_FUNC( WORKSHEET_SET_V_PAGEBREAKS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_col_t vbreaks[] = hb_parni( 2 ) ;
 
    hb_retni( worksheet_set_v_pagebreaks( self, vbreaks[] ) ); 
@@ -1757,7 +1844,7 @@ HB_FUNC( WORKSHEET_SET_V_PAGEBREAKS )
  */
 HB_FUNC( WORKSHEET_SET_ZOOM )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint16_t scale = hb_parnl( 2 ) ;
 
    if( self )
@@ -1778,7 +1865,7 @@ HB_FUNC( WORKSHEET_SET_ZOOM )
  */
 HB_FUNC( WORKSHEET_HIDE_ZERO )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_hide_zero( self ); 
@@ -1798,7 +1885,7 @@ HB_FUNC( WORKSHEET_HIDE_ZERO )
  */
 HB_FUNC( WORKSHEET_RIGHT_TO_LEFT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
 
    if( self )
       worksheet_right_to_left( self ); 
@@ -1818,7 +1905,7 @@ HB_FUNC( WORKSHEET_RIGHT_TO_LEFT )
  */
 HB_FUNC( WORKSHEET_SET_TAB_COLOR )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_color_t color = hb_parnl(2 ) ;
 
    if( self )
@@ -1841,7 +1928,7 @@ HB_FUNC( WORKSHEET_SET_TAB_COLOR )
  */
 HB_FUNC( WORKSHEET_PROTECT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    const char *password = hb_parcx( 2 ) ;
    lxw_protection *options = hb_parptr(3 ) ;
 
@@ -1865,7 +1952,7 @@ HB_FUNC( WORKSHEET_PROTECT )
  */
 HB_FUNC( WORKSHEET_OUTLINE_SETTINGS )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    uint8_t visible = hb_parni( 2 ) ;
    uint8_t symbols_below = hb_parni( 3 ) ;
    uint8_t symbols_right = hb_parni( 4 ) ;
@@ -1889,7 +1976,7 @@ HB_FUNC( WORKSHEET_OUTLINE_SETTINGS )
  */
 HB_FUNC( WORKSHEET_SET_DEFAULT_ROW )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    double height = hb_parnd( 2 ) ;
    uint8_t hide_unused_rows = hb_parni( 3 ) ;
 
@@ -1913,7 +2000,7 @@ HB_FUNC( WORKSHEET_SET_DEFAULT_ROW )
  */
 HB_FUNC( WORKSHEET_INSERT_IMAGE_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    const char *filename = hb_parcx( 4 ) ;
@@ -2042,7 +2129,7 @@ HB_FUNC( WORKSHEET_INSERT_IMAGE_OPT )
  */
 HB_FUNC( WORKSHEET_INSERT_IMAGE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    const char *filename = hb_parcx( 4 ) ;
@@ -2066,7 +2153,7 @@ worksheet_insert_image_buffer(lxw_worksheet *self,
 /*
 HB_FUNC( WORKSHEET_INSERT_IMAGE_BUFFER )
 { 
-   lxw_worksheet *self = hb_parptr( 1 );
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 );
    lxw_row_t row_num   = hb_parni( 2 );
    lxw_col_t col_num   = hb_parni( 3 );
    const unsigned char *image_buffer = hb_parcx( 4 );
@@ -2091,7 +2178,7 @@ HB_FUNC( WORKSHEET_INSERT_IMAGE_BUFFER )
 /*
 HB_FUNC( WORKSHEET_INSERT_CHART_OPT )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
    lxw_chart *chart = hb_parptr( 4 ) ;
@@ -2121,10 +2208,10 @@ HB_FUNC( WORKSHEET_INSERT_CHART_OPT )
  */
 HB_FUNC( WORKSHEET_INSERT_CHART )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t row_num = hb_parni( 2 ) ;
    lxw_col_t col_num = hb_parni( 3 ) ;
-   lxw_chart *chart = hb_parptr(4 ) ;
+   lxw_chart *chart = hb_XLSXChart_par(4 ) ;
 
    if( self )
       hb_retni( worksheet_insert_chart( self, row_num, col_num, chart) ); 
@@ -2148,7 +2235,7 @@ HB_FUNC( WORKSHEET_INSERT_CHART )
  */
 HB_FUNC( WORKSHEET_DATA_VALIDATION_RANGE )
 { 
-   lxw_worksheet *self = hb_parptr( 1 ) ;
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 ) ;
    lxw_row_t first_row = hb_parni( 2 ) ;
    lxw_col_t first_col = hb_parni( 3 ) ;
    lxw_row_t last_row = hb_parni( 4 ) ;
@@ -2184,7 +2271,7 @@ HB_FUNC( WORKSHEET_DATA_VALIDATION_CELL )
 */
 HB_FUNC( WORKSHEET_DATA_VALIDATION_CELL )
 {
-   lxw_worksheet *self = hb_parptr( 1 );
+   lxw_worksheet *self = hb_XLSXWorksheet_par( 1 );
    lxw_row_t row = hb_parni( 2 );
    lxw_col_t col = hb_parni( 3 );
    PHB_ITEM pHash = hb_param( 4, HB_IT_HASH );

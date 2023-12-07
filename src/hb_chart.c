@@ -17,6 +17,93 @@
 
 
 #include "hbapi.h"
+#include "hbapierr.h"
+#include "hbapiitm.h"
+
+
+
+
+
+typedef struct
+{
+   lxw_chart * chart;
+} HB_CHART_GC, * PHB_CHART_GC;
+
+static HB_GARBAGE_FUNC( XLSXChart_release )
+{
+   // fprintf( stderr, "Chiamato hb_XLSChart_release 2\n" );
+   PHB_CHART_GC pGC = ( PHB_CHART_GC ) Cargo;
+
+   /* Check if pointer is not NULL to avoid multiple freeing */
+   if( pGC->chart )
+   {
+      /* Destroy the object */
+      // fprintf( stderr, "Chiamato hb_XLSXChart_release 3a\n" );
+      // lxw_chart_free( pGC->chart );
+      // fprintf( stderr, "Chiamato hb_XLSXChart_release 3b\n" );
+
+      /* set pointer to NULL to avoid multiple freeing */
+      pGC->chart = NULL;
+      // fprintf( stderr, "Chiamato hb_XLSXChart_release 3c\n" );
+   }
+}
+
+static HB_GARBAGE_FUNC( hb_chart_mark )
+{
+   PHB_CHART_GC pGC = ( PHB_CHART_GC ) Cargo;
+
+      // fprintf( stderr, "Chiamato hb_chart_mark\n" );
+   if( pGC->chart )
+      hb_gcMark( pGC->chart );
+}
+
+static const HB_GC_FUNCS s_gcXLSXChartFuncs =
+{
+   XLSXChart_release,
+   hb_chart_mark
+};
+
+void hb_XLSXChart_ret( lxw_chart * p )
+{
+   // fprintf( stderr,"Chiamato hb_XLSXChart_ret\n" );
+   if( p )
+   {
+      PHB_CHART_GC pGC = ( PHB_CHART_GC ) hb_gcAllocate( sizeof( HB_CHART_GC ), &s_gcXLSXChartFuncs );
+      pGC->chart = p ;
+
+      hb_retptrGC( pGC );
+   }
+   else
+      hb_retptr( NULL );
+}
+
+lxw_chart * hb_XLSXChart_par( int iParam )
+{
+
+   PHB_CHART_GC pGC = ( PHB_CHART_GC ) hb_parptrGC( &s_gcXLSXChartFuncs, iParam ); 
+
+   if ( pGC && pGC->chart )
+      return pGC->chart;
+   else
+   {
+      hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
+      return NULL;
+   }
+}
+
+lxw_chart * hb_XLSXChart_item( PHB_ITEM pValue )
+{
+   PHB_CHART_GC pGC = ( PHB_CHART_GC ) hb_itemGetPtrGC( pValue, &s_gcXLSXChartFuncs );
+
+   if ( pGC && pGC->chart )
+      return pGC->chart;
+   else
+   {
+      hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
+      return NULL;
+   }
+}
+
 
 
 
@@ -165,11 +252,12 @@ chart_add_series(lxw_chart *self, const char *categories, const char *values)
 */
 HB_FUNC( CHART_ADD_SERIES )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    const char *categories = hb_parcx( 2 ) ;
    const char *values = hb_parcx( 3 ) ;
 
-   hb_retptr( chart_add_series(self, categories, values) ); 
+   if( self )
+      hb_retptr( chart_add_series(self, categories, values) ); 
 }
 
 
@@ -185,10 +273,11 @@ chart_set_style(lxw_chart *self, uint8_t style_id)
 */
 HB_FUNC( CHART_SET_STYLE )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    uint8_t style_id = hb_parni( 2 ) ;
 
-   chart_set_style(self, style_id) ; 
+   if( self )
+      chart_set_style(self, style_id) ; 
 }
 
 
@@ -915,9 +1004,10 @@ chart_axis_get(lxw_chart *self, lxw_chart_axis_type axis_type)
 */
 HB_FUNC( CHART_AXIS_GET )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_axis_type axis_type = hb_parni( 2 ) ;
 
+   if( self )
    hb_retptr( chart_axis_get(self, axis_type) ); 
 }
 
@@ -1506,7 +1596,7 @@ chart_title_set_name(lxw_chart *self, const char *name)
 */
 HB_FUNC( CHART_TITLE_SET_NAME )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    const char *name = hb_parcx( 2 ) ;
 
    chart_title_set_name(self, name) ; 
@@ -1526,11 +1616,12 @@ chart_title_set_name_range(lxw_chart *self, const char *sheetname,
 */
 HB_FUNC( CHART_TITLE_SET_NAME_RANGE )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    const char *sheetname = hb_parcx( 2 ) ;
    lxw_row_t row = hb_parni( 3 ) ;
    lxw_col_t col = hb_parni( 4 ) ;
 
+   if( self )
    chart_title_set_name_range(self, sheetname, row, col) ; 
 }
 
@@ -1547,8 +1638,9 @@ chart_title_set_name_font(lxw_chart *self, lxw_chart_font *font)
 */
 HB_FUNC( CHART_TITLE_SET_NAME_FONT )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_font *font = hb_parptr( 2 ) ;
+   if( self )
    chart_title_set_name_font(self, font) ; 
 }
 
@@ -1565,8 +1657,9 @@ chart_title_off(lxw_chart *self)
 */
 HB_FUNC( CHART_TITLE_OFF )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
 
+   if( self )
    chart_title_off(self) ; 
 }
 
@@ -1583,9 +1676,10 @@ chart_legend_set_position(lxw_chart *self, uint8_t position)
 */
 HB_FUNC( CHART_LEGEND_SET_POSITION )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    uint8_t position = hb_parni( 2 ) ;
 
+   if( self )
    chart_legend_set_position(self, position) ; 
 }
 
@@ -1602,9 +1696,10 @@ chart_legend_set_font(lxw_chart *self, lxw_chart_font *font)
 */
 HB_FUNC( CHART_LEGEND_SET_FONT )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_font *font = hb_parptr( 2 ) ;
 
+   if( self )
    chart_legend_set_font(self, font) ; 
 }
 
@@ -1622,7 +1717,7 @@ chart_legend_delete_series(lxw_chart *self, int16_t delete_series[])
 /*
 HB_FUNC( CHART_LEGEND_DELETE_SERIES )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    int16_t delete_series[] = hb_parnl( 2 ) ;
 
    hb_retni( chart_legend_delete_series(self, delete_series[]) ); 
@@ -1641,9 +1736,10 @@ chart_chartarea_set_line(lxw_chart *self, lxw_chart_line *line)
 */
 HB_FUNC( CHART_CHARTAREA_SET_LINE )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_line *line = hb_parptr( 2 ) ;
 
+   if( self )
    chart_chartarea_set_line(self, line) ; 
 }
 
@@ -1660,9 +1756,10 @@ chart_chartarea_set_fill(lxw_chart *self, lxw_chart_fill *fill)
 */
 HB_FUNC( CHART_CHARTAREA_SET_FILL )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_fill *fill = hb_parptr( 2 ) ;
 
+   if( self )
    chart_chartarea_set_fill(self, fill) ; 
 }
 
@@ -1679,9 +1776,10 @@ chart_chartarea_set_pattern(lxw_chart *self, lxw_chart_pattern *pattern)
 */
 HB_FUNC( CHART_CHARTAREA_SET_PATTERN )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_pattern *pattern = hb_parptr( 2 ) ;
 
+   if( self )
    chart_chartarea_set_pattern(self, pattern) ; 
 }
 
@@ -1698,9 +1796,10 @@ chart_plotarea_set_line(lxw_chart *self, lxw_chart_line *line)
 */
 HB_FUNC( CHART_PLOTAREA_SET_LINE )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_line *line = hb_parptr( 2 ) ;
 
+   if( self )
    chart_plotarea_set_line(self, line) ; 
 }
 
@@ -1717,9 +1816,10 @@ chart_plotarea_set_fill(lxw_chart *self, lxw_chart_fill *fill)
 */
 HB_FUNC( CHART_PLOTAREA_SET_FILL )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_fill *fill = hb_parptr( 2 ) ;
 
+   if( self )
    chart_plotarea_set_fill(self, fill) ; 
 }
 
@@ -1736,9 +1836,10 @@ chart_plotarea_set_pattern(lxw_chart *self, lxw_chart_pattern *pattern)
 */
 HB_FUNC( CHART_PLOTAREA_SET_PATTERN )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_pattern *pattern = hb_parptr( 2 ) ;
 
+   if( self )
    chart_plotarea_set_pattern(self, pattern) ; 
 }
 
@@ -1755,8 +1856,9 @@ chart_set_table(lxw_chart *self)
 */
 HB_FUNC( CHART_SET_TABLE )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
 
+   if( self )
    chart_set_table(self) ; 
 }
 
@@ -1774,12 +1876,13 @@ chart_set_table_grid(lxw_chart *self, uint8_t horizontal, uint8_t vertical,
 */
 HB_FUNC( CHART_SET_TABLE_GRID )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    uint8_t horizontal = hb_parni( 2 ) ;
    uint8_t vertical = hb_parni( 3 ) ;
    uint8_t outline = hb_parni( 4 ) ;
    uint8_t legend_keys = hb_parni( 5 ) ;
 
+   if( self )
    chart_set_table_grid(self, horizontal, vertical, outline, legend_keys) ; 
 }
 
@@ -1796,9 +1899,10 @@ chart_set_table_font(lxw_chart *self, lxw_chart_font *font)
 */
 HB_FUNC( CHART_SET_TABLE_FONT )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_font *font = hb_parptr( 2 ) ;
 
+   if( self )
    chart_set_table_font(self, font) ; 
 }
 
@@ -1815,8 +1919,9 @@ chart_set_up_down_bars(lxw_chart *self)
 */
 HB_FUNC( CHART_SET_UP_DOWN_BARS )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
 
+   if( self )
    chart_set_up_down_bars(self) ; 
 }
 
@@ -1836,12 +1941,13 @@ chart_set_up_down_bars_format(lxw_chart *self, lxw_chart_line *up_bar_line,
 */
 HB_FUNC( CHART_SET_UP_DOWN_BARS_FORMAT )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_line *up_bar_line = hb_parptr( 2 ) ;
    lxw_chart_fill *up_bar_fill = hb_parptr( 3 ) ;
    lxw_chart_line *down_bar_line = hb_parptr( 4 ) ;
    lxw_chart_fill *down_bar_fill = hb_parptr( 5 ) ;
 
+   if( self )
    chart_set_up_down_bars_format(self, up_bar_line, up_bar_fill, down_bar_line, down_bar_fill) ; 
 }
 
@@ -1858,9 +1964,10 @@ chart_set_drop_lines(lxw_chart *self, lxw_chart_line *line)
 */
 HB_FUNC( CHART_SET_DROP_LINES )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_line *line = hb_parptr( 2 ) ;
 
+   if( self )
    chart_set_drop_lines(self, line) ; 
 }
 
@@ -1877,9 +1984,10 @@ chart_set_high_low_lines(lxw_chart *self, lxw_chart_line *line)
 */
 HB_FUNC( CHART_SET_HIGH_LOW_LINES )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    lxw_chart_line *line = hb_parptr( 2 ) ;
 
+   if( self )
    chart_set_high_low_lines(self, line) ; 
 }
 
@@ -1896,9 +2004,10 @@ chart_set_series_overlap(lxw_chart *self, int8_t overlap)
 */
 HB_FUNC( CHART_SET_SERIES_OVERLAP )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    int8_t overlap = hb_parni( 2 ) ;
 
+   if( self )
    chart_set_series_overlap(self, overlap) ; 
 }
 
@@ -1915,9 +2024,10 @@ chart_show_blanks_as(lxw_chart *self, uint8_t option)
 */
 HB_FUNC( CHART_SHOW_BLANKS_AS )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    uint8_t option = hb_parni( 2 ) ;
 
+   if( self )
    chart_show_blanks_as(self, option) ; 
 }
 
@@ -1934,8 +2044,9 @@ chart_show_hidden_data(lxw_chart *self)
 */
 HB_FUNC( CHART_SHOW_HIDDEN_DATA )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
 
+   if( self )
    chart_show_hidden_data(self) ; 
 }
 
@@ -1952,9 +2063,10 @@ chart_set_series_gap(lxw_chart *self, uint16_t gap)
 */
 HB_FUNC( CHART_SET_SERIES_GAP )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    uint16_t gap = hb_parnl( 2 ) ;
 
+   if( self )
    chart_set_series_gap(self, gap) ; 
 }
 
@@ -1971,9 +2083,10 @@ chart_set_rotation(lxw_chart *self, uint16_t rotation)
 */
 HB_FUNC( CHART_SET_ROTATION )
 { 
-   lxw_chart *self = hb_parptr( 1 ) ;
+   lxw_chart *self = hb_XLSXChart_par( 1 ) ;
    uint16_t rotation = hb_parnl( 2 ) ;
 
+   if( self )
    chart_set_rotation(self, rotation) ; 
 }
 

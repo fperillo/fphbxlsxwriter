@@ -21,6 +21,10 @@
 #include "hbapierr.h"
 #include "hbapiitm.h"
 
+
+void hb_XLSXWorksheet_ret( lxw_worksheet * );
+void hb_XLSXChart_ret( lxw_chart * );
+
 typedef struct
 {
    lxw_workbook * workbook;
@@ -28,19 +32,20 @@ typedef struct
 
 static HB_GARBAGE_FUNC( XLSXWorkbook_release )
 {
-   // printf( "Chiamato hb_XLSXWorkbook_release 2\n" );
+   // fprintf( stderr, "Chiamato hb_XLSXWorkbook_release 2\n" );
    PHB_WORKBOOK_GC pGC = ( PHB_WORKBOOK_GC ) Cargo;
 
    /* Check if pointer is not NULL to avoid multiple freeing */
    if( pGC->workbook )
    {
       /* Destroy the object */
-      // printf( "Chiamato hb_XLSXWorkbook_release 3a\n" );
+      // fprintf( stderr, "Chiamato hb_XLSXWorkbook_release 3a\n" );
       lxw_workbook_free( pGC->workbook );
-      // printf( "Chiamato hb_XLSXWorkbook_release 3b\n" );
+      // fprintf( stderr, "Chiamato hb_XLSXWorkbook_release 3b\n" );
 
       /* set pointer to NULL to avoid multiple freeing */
       pGC->workbook = NULL;
+      // fprintf( stderr, "Chiamato hb_XLSXWorkbook_release 3c\n" );
    }
 }
 
@@ -48,6 +53,7 @@ static HB_GARBAGE_FUNC( hb_workbook_mark )
 {
    PHB_WORKBOOK_GC pGC = ( PHB_WORKBOOK_GC ) Cargo;
 
+      // fprintf( stderr, "Chiamato hb_workbook_mark\n" );
    if( pGC->workbook )
       hb_gcMark( pGC->workbook );
 }
@@ -60,7 +66,7 @@ static const HB_GC_FUNCS s_gcXLSXWorkbookFuncs =
 
 void hb_XLSXWorkbook_ret( lxw_workbook * p )
 {
-    // fprintf( stderr,"Chiamato hb_XLSXWorkbook_ret\n" );
+   // fprintf( stderr,"Chiamato hb_XLSXWorkbook_ret\n" );
    if( p )
    {
       PHB_WORKBOOK_GC pGC = ( PHB_WORKBOOK_GC ) hb_gcAllocate( sizeof( HB_WORKBOOK_GC ), &s_gcXLSXWorkbookFuncs );
@@ -244,11 +250,11 @@ HB_FUNC( WORKBOOK_ADD_WORKSHEET )
    const char *sheetname = hb_parcx( 2 );
    if ( HB_ISNIL( 2 ) || strlen(sheetname) == 0 )
    {
-      hb_retptr( workbook_add_worksheet( self, NULL ) );
+      hb_XLSXWorksheet_ret( workbook_add_worksheet( self, NULL ) );
    }
    else
    {
-      hb_retptr( workbook_add_worksheet( self, sheetname ) );
+      hb_XLSXWorksheet_ret( workbook_add_worksheet( self, sheetname ) );
    }
 }
 
@@ -289,7 +295,7 @@ HB_FUNC( WORKBOOK_ADD_CHART )
    uint8_t type = hb_parni( 2 ) ;
 
    if( self )
-   hb_retptr( workbook_add_chart( self, type ) ); 
+      hb_XLSXChart_ret( workbook_add_chart( self, type ) ); 
    else
       hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
 }
@@ -309,10 +315,9 @@ HB_FUNC( WORKBOOK_ADD_FORMAT )
    lxw_workbook *self = hb_XLSXWorkbook_par( 1 ) ;
 
    if( self )
-   hb_XLSXFormat_ret( workbook_add_format( self ) ); 
+      hb_XLSXFormat_ret( workbook_add_format( self ) ); 
    else
       hb_errRT_BASE( EG_ARG, 2020, NULL, HB_ERR_FUNCNAME, HB_ERR_ARGS_BASEPARAMS );
-   // hb_retptr( workbook_add_format( self ) ); 
 }
 
 
@@ -329,11 +334,14 @@ HB_FUNC( WORKBOOK_CLOSE )
 { 
    int i;
    PHB_WORKBOOK_GC pGC = ( PHB_WORKBOOK_GC ) hb_parptrGC( &s_gcXLSXWorkbookFuncs, 1 ); 
-   printf("Workbook_close\n");
+   // fprintf(stderr, "Workbook_close\n");
    if ( pGC && pGC->workbook )
    {
+      // fprintf(stderr, "Workbook_close  1a\n");
       i = workbook_close( pGC->workbook ); 
+      // fprintf(stderr, "Workbook_close  1b\n");
       pGC->workbook = NULL;
+      // fprintf(stderr, "Workbook_close  1c\n");
       hb_retni( i ); 
    }
    else
