@@ -1,9 +1,9 @@
 Pod::Spec.new do |s|
   s.name                  = "libxlsxwriter"
-  s.version               = "1.1.5"
+  s.version               = "1.1.8"
   s.summary               = "Libxlsxwriter: A C library for creating Excel XLSX files."
-  s.ios.deployment_target = "8.0"
-  s.osx.deployment_target = "10.8"
+  s.ios.deployment_target = "12.0"
+  s.osx.deployment_target = "10.13"
 
   s.description           = <<-DESC
                             Libxlsxwriter is a C library that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file.
@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
                             * Defined names.
                             * Autofilters.
                             * Charts.
-                            * Data validation and drop down lists.
+                            * Data validation and dropdown lists.
                             * Conditional formatting.
                             * Worksheet PNG/JPEG/GIF images.
                             * Cell comments.
