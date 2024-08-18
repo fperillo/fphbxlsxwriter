@@ -67,6 +67,10 @@ libxlsxwriter/src/hash_table.c
 libxlsxwriter/src/metadata.c
 libxlsxwriter/src/packager.c
 libxlsxwriter/src/relationships.c
+libxlsxwriter/src/rich_value.c
+libxlsxwriter/src/rich_value_rel.c
+libxlsxwriter/src/rich_value_structure.c
+libxlsxwriter/src/rich_value_types.c
 libxlsxwriter/src/shared_strings.c
 libxlsxwriter/src/styles.c
 libxlsxwriter/src/table.c
