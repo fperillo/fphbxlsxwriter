@@ -1,5 +1,4 @@
 -hblib
--rebuild
 
 -olib/${hb_plat}/${hb_comp}/${hb_cpu}/${hb_name}
 
@@ -53,6 +52,8 @@ libxlsxwriter\third_party\minizip\zip.c
 libxlsxwriter\third_party\minizip\unzip.c
 libxlsxwriter\third_party\minizip\iowin32.c
 
+libxlsxwriter\third_party\tmpfileplus\tmpfileplus.c
+
 libxlsxwriter/src/app.c
 libxlsxwriter/src/chart.c
 libxlsxwriter/src/chartsheet.c
@@ -78,5 +79,5 @@ libxlsxwriter/src/xmlwriter.c
 {allbcc}libxlsxwriter/bcc_comp.c
 
 -cflag=-DUSE_NO_MD5
--cflag=-DUSE_STANDARD_TMPFILE
+# -cflag=-DUSE_STANDARD_TMPFILE
 {allbcc}-cflag=-DUSE_FILE32API
