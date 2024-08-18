@@ -18,7 +18,7 @@
 
 function main() 
 
-    local workbook, worksheet, row, col, aExpenses
+    local workbook, worksheet, row, col, aExpenses, bold
 
     aExpenses := { ;
 	           { "Rent", 1000 },;
@@ -31,7 +31,15 @@ function main()
     workbook  = workbook_new("tutorial01.xlsx")
     worksheet = workbook_add_worksheet(workbook, NIL)
 
+    /* Add a bold format to use to highlight cells. */
+    bold = workbook_add_format(workbook)
+    format_set_bold(bold)
+
     col := 0
+
+    /* Write some data header. */
+    worksheet_write_string(worksheet, 0, col,     "Item", bold)
+    worksheet_write_string(worksheet, 0, col + 1, "Cost", bold)
 
     /* Iterate over the data and write it out element by element. */
     for row := 1 to 4 
@@ -40,8 +48,8 @@ function main()
     next row
 
     /* Write a total using a formula. */
-    worksheet_write_string (worksheet, row, col,     "Total",       NIL)
-    worksheet_write_formula(worksheet, row, col + 1, "=SUM(B1:B4)", NIL)
+    worksheet_write_string (worksheet, row-1, col,     "Total",       NIL)
+    worksheet_write_formula(worksheet, row-1, col + 1, "=SUM(B1:B4)", NIL)
 
     /* Save the workbook and free any allocated memory. */
     return workbook_close(workbook)
