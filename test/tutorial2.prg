@@ -19,6 +19,7 @@ function main()
 
     local workbook, worksheet, row, col, i, bold, money, expenses
 
+
     expenses := {;
 	          {"Rent", 1000},;
 		  {"Gas",   100},;
@@ -57,5 +58,6 @@ function main()
     worksheet_write_formula(worksheet, row + 1, col + 1, "=SUM(B2:B5)", money)
 
     /* Save the workbook and free any allocated memory. */
-    return workbook_close(workbook)
+    i := workbook_close(workbook)
+    RETURN i
 

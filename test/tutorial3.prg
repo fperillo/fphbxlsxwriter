@@ -21,6 +21,8 @@ function main()
 
     local workbook, worksheet, row, col, i, bold, money, date_format, expenses
 
+? "Inizio procedura"
+
     /* Some data we want to write to the worksheet. */
     expenses := {;
 	          { "Rent", 1000, Date() },;
@@ -37,6 +39,7 @@ function main()
 
     /* Add a bold format to use to highlight cells. */
     bold := workbook_add_format(workbook)
+//? "valtype bold=", valtype(bold)
     format_set_bold(bold)
 
     /* Add a number format for cells with money. */
@@ -68,6 +71,8 @@ function main()
     worksheet_write_formula(worksheet, row + 1, col + 2, "=SUM(C2:C5)", money)
 
     /* Save the workbook and free any allocated memory. */
-    return workbook_close(workbook)
+    workbook_close(workbook)
 
+    ? "Fine del tutorial"
+ return .t.
 //eof
