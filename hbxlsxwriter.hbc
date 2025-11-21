@@ -3,7 +3,7 @@ description=LibXlsxWriter wrapper (XLSX)
 incpaths=.
 
 #headers=${hb_name}.ch
-libpaths=lib/${hb_plat}/${hb_comp}/${hb_cpu}
+libpaths=lib/${hb_plat}/${hb_comp}
 
 libs=${hb_name}
 
